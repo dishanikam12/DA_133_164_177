@@ -9,8 +9,7 @@ from wordcloud import WordCloud, STOPWORDS
 import nltk
 from nltk.corpus import stopwords
 from scipy import spatial
-import warnings
-warnings.filterwarnings('ignore')
+
 
 def get_results(user_text):
     credits = pd.read_csv("tmdb_5000_credits.csv")
@@ -19,10 +18,10 @@ def get_results(user_text):
     # changing the genres column from json to string
     movies['genres'] = movies['genres'].apply(json.loads)
     for index,i in zip(movies.index,movies['genres']):
+    
         list1 = []
         for j in range(len(i)):
             list1.append((i[j]['name'])) # the key 'name' contains the name of the genre
-           
         movies.loc[index,'genres'] = str(list1)
         
     # changing the keywords column from json to string
@@ -63,7 +62,6 @@ def get_results(user_text):
     movies = movies[['id','original_title','genres','cast','vote_average','director','keywords']]
 
     movies['genres'] = movies['genres'].str.strip('[]').str.replace(' ','').str.replace("'",'')
-    print(movies['genres'].head(5))
     movies['genres'] = movies['genres'].str.split(',')
 
 
@@ -100,7 +98,7 @@ def get_results(user_text):
 
 
     movies['genres_bin'] = movies['genres'].apply(lambda x: binary(x))
-
+    #movies['genres_bin'].head()
 
     movies['cast'] = movies['cast'].str.strip('[]').str.replace(' ','').str.replace("'",'').str.replace('"','')
     movies['cast'] = movies['cast'].str.split(',')
@@ -235,7 +233,6 @@ def get_results(user_text):
     def predict_score(name):
         #name = input('Enter a movie title: ')
         new_movie = movies[movies['original_title'].str.contains(name)].iloc[0].to_frame().T
-        print(new_movie)
         #print('Selected Movie: ',new_movie.original_title.values[0])
         def getNeighbors(baseMovie, K):
             distances = []
@@ -281,8 +278,3 @@ def get_results(user_text):
     result_df,length = predict_score(user_text)
     return result_df,length
 
-user_input = input("Enter the movie title:")
-
-result_df,len= get_results(user_input)
-print(result_df)
-print(len)

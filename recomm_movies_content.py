@@ -6,8 +6,6 @@ import matplotlib.pyplot as plt
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import sigmoid_kernel
 import ast
-import warnings
-warnings.filterwarnings('ignore')
 
 def get_results_2(user_text):
     
@@ -15,7 +13,7 @@ def get_results_2(user_text):
     movies = pd.read_csv("modified_movies_final.csv")
     credits_column_renamed = credits.rename(index=str, columns={"movie_id": "id"})
     movies_merge = movies.merge(credits_column_renamed, on='id')
-    movies_cleaned = movies_merge.drop(columns=['title_x', 'title_y', 'status','production_countries'])
+    movies_cleaned = movies_merge.drop(columns=[ 'title_x', 'title_y', 'status','production_countries'])
     
     a=movies_cleaned['genres']
     #a.head(10)
@@ -32,21 +30,30 @@ def get_results_2(user_text):
     tfv = TfidfVectorizer(min_df=3,  max_features=None,
             strip_accents='unicode', analyzer='word',token_pattern=r'\w{1,}',
             ngram_range=(1, 3),
-            stop_words = 'english')   
+            stop_words = 'english') 
+      
     x = tfv.fit_transform(movies_cleaned['statement'].apply(lambda x: np.str_(x)))
+    #Tf-idf-weighted document-term matrix i stored in x.
+    
     tfv_matrix = x
     sig = sigmoid_kernel(tfv_matrix, tfv_matrix)
+    
+    #computes similiarity scores between every two terms thus diagnol values are 1 and returns the similarity matrix.
+    
     indices = pd.Series(movies_cleaned.index, index=movies_cleaned['original_title']).drop_duplicates()
+    #indices of all the movie titles inclined with the similarity matrix.
 
     
     def give_recomendations(title, sig=sig):
-        # Get the index corresponding to original_title
+        #receives the sig value which is the similarity matrix along with user input.
+        
+        # Get the index for the user input.
         idx = indices[title]
 
-        # Get the pairwsie similarity scores
+        # Get the pairwsie similarity scores for this title with the all other titles.
         sig_scores = list(enumerate(sig[idx]))
 
-        # Sort the movies
+        # Sort the movies using this score.
         sig_scores = sorted(sig_scores, key=lambda x: x[1], reverse=True)
 
         # Scores of the 10 most similar movies
@@ -69,9 +76,6 @@ def get_results_2(user_text):
         return results_dataframe_2,len(results_dataframe_2.index)
     
     result_df_2,length_2 = give_recomendations(user_text)
+
     return result_df_2,length_2
     
-user_input = input("Enter the movie title:")   
-result_df,len= get_results_2(user_input)
-print(result_df)
-print(len)
